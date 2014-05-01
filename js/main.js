@@ -33,13 +33,18 @@ navigation.viewBase = function (controller) {
 	self.Nodes = [];
 	self.render = function (htmlModes) {
 		var d = document.createDocumentFragment();
-		for (var i = 0; i < htmlModes.length; i++) {
+		var l = htmlModes.length;
+		for (var i = 0; i < l; i++) {
 			d.appendChild(htmlModes[i].htmlelements);
 		}
 		$("#navigationItems").append($(d));
 	};
-	self.renderChild = function (parent, child) {
+	self.renderChild = function (parent, children) {
 		var d = document.createDocumentFragment();
+		var l = children.length;
+		for (var i = 0; i < l; i++) {
+			d.appendChild(children[i].htmlelements);
+		}
 		parent.appendChild(d);
 	}
 	self.getHtmlElements = function (type, title, path, onImageClickFunction) {
@@ -52,29 +57,18 @@ navigation.viewBase = function (controller) {
 		img.alt = "upload";
 		link.innerHTML = title;
 		link.href = path;
-		img.onclick = function (e) {
-			onImageClickFunction(e);
+		img.onclick = function (event) {
+			if ("function" === typeof onImageClickFunction)
+				onImageClickFunction(event);
 		};
 		mainDiv.appendChild(img);
 		mainDiv.appendChild(link);
 		li.appendChild(mainDiv);
 		docFragment.appendChild(li);
-		switch (type) {
-			case "web":
-				var ul = document.createElement("ul");
-				mainDiv.appendChild(ul);
-				break;
-			case "list":
-				var ul = document.createElement("ul");
-				mainDiv.appendChild(ul);
-				break;
-			case "item":
-				break;
-			default:
-				alert("Type nicht gefunden...");
-				break;
+		if (type === "web" || type === "list") {
+			var ul = document.createElement("ul");
+			mainDiv.appendChild(ul);
 		}
-
 		return docFragment;
 	}
 
@@ -84,9 +78,6 @@ navigation.controller = function (view) {
 	var self = this;
 	var view = view;
 	self.models = [];
-	self.imageClickEvent = function (e, v) {
-		alert(e + v);
-	};
 
 	//Base Nodes get rendered
 	self.init = function (data) {
@@ -104,7 +95,24 @@ navigation.controller = function (view) {
 
 	//dataChanged Method!
 	self.dataChanged = function (model, event) {
-		alert(event.target);
+		//	alert(event.currentTarget.parentNode);
+		var sChild = [];
+		var start = Date.now();
+
+		console.log(start);
+		for (var i = 0; i < 50000; i++) {
+			var b = new navigation.webModel(self, data.data[0]);
+			b.htmlelements = view.getHtmlElements(b.getType(), b.title + "child" + i, b.path, function (e) {
+				self.dataChanged(b, e);
+			});
+			sChild.push(b);
+		}
+		view.renderChild(event.currentTarget.parentNode.getElementsByTagName("ul")[0], sChild);
+
+		var end = Date.now();
+		console.log(end);
+		var elapsed = (end - start) / 1000;
+		console.log(elapsed + " Sekunden!");
 	};
 };
 
@@ -120,7 +128,6 @@ navigation.webModel = function (_controller, _data) {
 	self.getType = function () {
 		return self.type;
 	};
-
 };
 navigation.listModel = function () {
 	this.listItems = [];
@@ -147,3 +154,39 @@ $(document).ready(function () {
 	c.init(data.data);
 });
 
+
+var start = Date.now();
+
+console.log(start);
+var ii = "";
+for (var i = 0; i < 10000000; i++) {
+	ii += i;
+
+}
+var end = Date.now();
+var elapsed = (end - start) / 1000;
+console.log(elapsed + " Sekunden!");
+
+console.log("#########");
+var start = Date.now();
+var k = "";
+for (var i = 0; i < 10000000; i++) {
+
+	k.concat(i);
+}
+
+var end = Date.now();
+var elapsed = (end - start) / 1000;
+console.log(elapsed + " Sekunden!");
+
+console.log("#########");
+var start = Date.now();
+var j = "";
+for (var i = 0; i < 10000000; i++) {
+
+	j = ii + i;
+}
+
+var end = Date.now();
+var elapsed = (end - start) / 1000;
+console.log(elapsed + " Sekunden!");
